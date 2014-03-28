@@ -23,6 +23,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.potion.PotionEffectType;
 
 import com.valygard.vhunger.util.HungerUtils;
@@ -40,6 +41,9 @@ public class GlobalListener implements Listener {
 		this.utils	= plugin.getUtils();
 	}
 	
+	/*
+	 * Add the potion effect to the player.
+	 */
 	@EventHandler (priority = EventPriority.HIGHEST)
 	public void onFoodLevelChange(FoodLevelChangeEvent e) {
 		
@@ -57,6 +61,31 @@ public class GlobalListener implements Listener {
 		}
 	}
 	
+	/*
+	 * Notify players of new updates.
+	 */
+	@EventHandler
+	public void onJoin(PlayerJoinEvent e) {
+		Player p = e.getPlayer();
+		// Only ops or those with proper permissions get update messages.
+		if (!p.hasPermission("hunger.admin") && !p.hasPermission("hunger.update") && !p.isOp())
+			return;
+		
+		if (!plugin.update)
+			return;
+		
+		if (!plugin.getConfig().getBoolean("global-settings.check-for-updates"))
+			return;
+		
+		// If auto-update is disabled, tell the player that vHunger is available for download.
+		if (!plugin.getConfig().getBoolean("global-settings.auto-update"))
+			plugin.tell(p, "&e" + plugin.name + " &r is available for download at:&e http://dev.bukkit.org/bukkit-plugins/vhunger/");
+	}
+	
+	/*
+	 * This event is separate from the last FoodLevelChangeEvent due to readability.
+	 * It's goal is to control hunger depletion in a variety of ways.
+	 */
 	@EventHandler
 	public void scaleHunger(FoodLevelChangeEvent e) {
 		Player p = (Player) e.getEntity();

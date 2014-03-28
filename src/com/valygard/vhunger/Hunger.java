@@ -17,29 +17,73 @@
 package com.valygard.vhunger;
 
 import java.util.List;
+import java.util.logging.Level;
 
+import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.valygard.vhunger.util.HungerUtils;
+import com.valygard.vhunger.util.Updater;
 
 /**
  * @author Anand
  * 
  */
 public class Hunger extends JavaPlugin {
+	// Classes
 	private Commands commands;
 	private HungerUtils utils;
 	
+	// Updater related
+	public boolean update = false;
+	public String name = "";
+	
 	public void onEnable() {
+		// Instantiate our HungerUtils class.
 		utils = new HungerUtils(this);
 		
-		commands = new Commands(this);
-		getCommand("hunger").setExecutor(commands);
+		// Register commands
+		registerCommands();
 		
+		// Load the default config-file.
 		loadConfig();
 
+		// Register our events
+		registerEvents();
+		
+		// Finally, check for updates.
+		checkForUpdates();
+	}
+	
+	private void registerEvents() {
 		getServer().getPluginManager().registerEvents(new GlobalListener(this), this);
+	}
+	
+	private void registerCommands() {
+		commands = new Commands(this);
+		getCommand("hunger").setExecutor(commands);
+	}
+	
+	private void checkForUpdates() {
+		if (!getConfig().getBoolean("global-settings.check-for-updates")) {
+			getLogger().log(Level.WARNING, "Why you no like being informed about updates??");
+			return;
+		}
+		
+		if (getConfig().getBoolean("global-settings.auto-update")) {
+			Updater updater = new Updater(this, 65327, this.getFile(), Updater.UpdateType.DEFAULT, true);
+			update = updater.getResult() == Updater.UpdateResult.UPDATE_AVAILABLE;
+			name = updater.getLatestName(); 
+			getLogger().log(Level.INFO, name + " has been installed. Restart your server for changes to take effect.");
+			return;
+		}
+		
+		Updater updater = new Updater(this, 65327, this.getFile(), Updater.UpdateType.NO_DOWNLOAD, true);
+		update = updater.getResult() == Updater.UpdateResult.SUCCESS;
+		name = updater.getLatestName(); 
+		return;
 	}
 
 	private void loadConfig() {
@@ -96,6 +140,11 @@ public class Hunger extends JavaPlugin {
 				"http://dev.bukkit.org/bukkit-plugins/vhunger/" + s +
 				"Happy configuring!";
 
+	}
+	
+	// Send a message with prefix and allow for '&' hex-color codes.
+	public void tell(Player p, String msg) {
+		p.sendMessage(ChatColor.translateAlternateColorCodes('&', ChatColor.GREEN + "[vHunger] " + ChatColor.RESET + msg));
 	}
 	
 	public HungerUtils getUtils() {

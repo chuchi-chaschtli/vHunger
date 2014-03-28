@@ -17,7 +17,6 @@
 package com.valygard.vhunger;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -52,17 +51,17 @@ public class Commands implements CommandExecutor {
 				sendIncorrectMessage(p, false, true);
 				return false;
 			}
-			tell(p, "Your hunger is &e" + hunger + ".");
+			plugin.tell(p, "Your hunger is &e" + hunger + ".");
 		}
 		
 		else if (args.length == 1) {
 			if (args[0].equalsIgnoreCase("help")) {
-				tell(p, "&2------ [&avHunger (Version " + plugin.getDescription().getVersion() + ")&2] ------");
-				tell(p, "&a/hunger [player] &r-&e Check a player's hunger.");
+				plugin.tell(p, "&2------ [&avHunger (Version " + plugin.getDescription().getVersion() + ")&2] ------");
+				plugin.tell(p, "&a/hunger [player] &r-&e Check a player's hunger.");
 				if(p.hasPermission("hunger.admin")) {
-					tell(p, "&a/hunger nourish [player] &r-&e Feed a player.");
-					tell(p, "&a/hunger set [player] <integer> &r-&e Set your own hunger or another player's.");
-					tell(p, "&a/hunger config <save|reload> &r-&e Save or reload the config file.");
+					plugin.tell(p, "&a/hunger nourish [player] &r-&e Feed a player.");
+					plugin.tell(p, "&a/hunger set [player] <integer> &r-&e Set your own hunger or another player's.");
+					plugin.tell(p, "&a/hunger config <save|reload> &r-&e Save or reload the config file.");
 				}	
 			}
 			
@@ -76,7 +75,7 @@ public class Commands implements CommandExecutor {
 				p.setFoodLevel(20);
 				p.setSaturation(20);
 				
-				tell(p, "You have been satiated.");
+				plugin.tell(p, "You have been satiated.");
 			} else {
 				// If the args[0] is anything else, it should check if its a player.
 				if (!p.hasPermission("hunger.check.others")) {
@@ -87,11 +86,11 @@ public class Commands implements CommandExecutor {
 				// Check is player is null.
 				Player args1 = Bukkit.getPlayer(args[0]);
 				if (args1 == null) {
-					tell(p, "The player &e " + args[0] + "&r is offline or does not exist.");
+					plugin.tell(p, "The player &e " + args[0] + "&r is offline or does not exist.");
 					return false;
 				}
 				
-				tell(p, args1 + "'s hunger level is &e" + args1.getFoodLevel() + ".");
+				plugin.tell(p, args1 + "'s hunger level is &e" + args1.getFoodLevel() + ".");
 				
 			}
 		}
@@ -106,7 +105,7 @@ public class Commands implements CommandExecutor {
 					
 					// Reload config
 					plugin.reloadConfig();
-					tell(p, "Config successfully reloaded.");
+					plugin.tell(p, "Config successfully reloaded.");
 				}
 				
 				else if (args[1].equalsIgnoreCase("save")) {
@@ -117,7 +116,7 @@ public class Commands implements CommandExecutor {
 					
 					// Save Config
 					plugin.saveConfig();
-					tell(p, "Config successfully saved.");
+					plugin.tell(p, "Config successfully saved.");
 				}
 				
 				else {
@@ -136,7 +135,7 @@ public class Commands implements CommandExecutor {
 					int newHunger = Integer.parseInt(args[1]);
 					p.setFoodLevel(newHunger);
 					p.setSaturation(newHunger);
-					tell(p, "You have set your hunger to &e" + newHunger + ".");
+					plugin.tell(p, "You have set your hunger to &e" + newHunger + ".");
 				} catch (NumberFormatException e) {
 					throw new NumberFormatException("Expected integer between 0-20 for hunger!");
 				}
@@ -151,7 +150,7 @@ public class Commands implements CommandExecutor {
 				Player args2 = Bukkit.getPlayer(args[1]);
 				
 				if (args2 == null) {
-					tell(p, "The player &e " + args[1] + "&r is offline or does not exist.");
+					plugin.tell(p, "The player &e " + args[1] + "&r is offline or does not exist.");
 					return false;
 				}
 				
@@ -159,8 +158,8 @@ public class Commands implements CommandExecutor {
 				args2.setFoodLevel(20);
 				args2.setSaturation(20);
 				
-				tell(p, "You have satiated &e " + args2.getName() + ".");
-				tell(args2, "You have been satiated.");
+				plugin.tell(p, "You have satiated &e " + args2.getName() + ".");
+				plugin.tell(args2, "You have been satiated.");
 			}
 			
 			else {
@@ -184,7 +183,7 @@ public class Commands implements CommandExecutor {
 			Player args2 = Bukkit.getPlayer(args[1]);
 			
 			if (args2 == null) {
-				tell(p, "The player &e " + args[1] + "&r is offline or does not exist.");
+				plugin.tell(p, "The player &e " + args[1] + "&r is offline or does not exist.");
 				return false;
 			}
 			
@@ -194,8 +193,8 @@ public class Commands implements CommandExecutor {
 				args2.setFoodLevel(newHunger);
 				args2.setSaturation(newHunger);
 				
-				tell(args2, "Your hunger is now &e " + newHunger + ".");
-				tell(p, "You have set the hunger of &e " + args2.getName() + " &rto&e " + newHunger + ".");
+				plugin.tell(args2, "Your hunger is now &e " + newHunger + ".");
+				plugin.tell(p, "You have set the hunger of &e " + args2.getName() + " &rto&e " + newHunger + ".");
 			} catch (NumberFormatException e) {
 				throw new NumberFormatException("Expected integer between 0-20 for hunger!");
 			}
@@ -203,17 +202,12 @@ public class Commands implements CommandExecutor {
 		return true;
 	}
 	
-	// Send a message with prefix and allow for '&' hex-color codes.
-	private void tell(Player p, String msg) {
-		p.sendMessage(ChatColor.translateAlternateColorCodes('&', ChatColor.GREEN + "[vHunger] " + ChatColor.RESET + msg));
-	}
-	
 	// Our incorrect usage formulator.
 	private void sendIncorrectMessage(Player p, boolean hasPermission, boolean invalidArgs) {
 		if (!hasPermission)
-			tell(p, "You do not have permission to use this command.");
+			plugin.tell(p, "You do not have permission to use this command.");
 		if (!invalidArgs)
-			tell(p, "Invalid arguments. Use &e/hunger help&r for a list of commands.");
+			plugin.tell(p, "Invalid arguments. Use &e/hunger help&r for a list of commands.");
 	}
 	
 	public Hunger getPlugin() {
