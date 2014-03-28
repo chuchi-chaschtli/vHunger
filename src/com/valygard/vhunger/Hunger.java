@@ -21,13 +21,22 @@ import java.util.List;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import com.valygard.vhunger.util.HungerUtils;
+
 /**
  * @author Anand
  * 
  */
 public class Hunger extends JavaPlugin {
-
+	private Commands commands;
+	private HungerUtils utils;
+	
 	public void onEnable() {
+		utils = new HungerUtils(this);
+		
+		commands = new Commands(this);
+		getCommand("hunger").setExecutor(commands);
+		
 		loadConfig();
 
 		getServer().getPluginManager().registerEvents(new GlobalListener(this), this);
@@ -87,5 +96,9 @@ public class Hunger extends JavaPlugin {
 				"http://dev.bukkit.org/bukkit-plugins/vhunger/" + s +
 				"Happy configuring!";
 
+	}
+	
+	public HungerUtils getUtils() {
+		return utils;
 	}
 }

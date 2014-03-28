@@ -20,6 +20,7 @@ import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.potion.PotionEffectType;
@@ -32,24 +33,27 @@ import com.valygard.vhunger.util.HungerUtils;
  */
 public class GlobalListener implements Listener {
 	private Hunger plugin;
+	private HungerUtils utils;
 	
 	public GlobalListener(Hunger plugin) {
 		this.plugin = plugin;
+		this.utils	= plugin.getUtils();
 	}
 	
-	@EventHandler
+	@EventHandler (priority = EventPriority.HIGHEST)
 	public void onFoodLevelChange(FoodLevelChangeEvent e) {
 		
 		// Because e.getEntity() returns HumanEntity, we don't have to perform an instance check.
 		Player p = (Player) e.getEntity();
+		//FileConfiguration cfg = plugin.getConfig();
 		
-		// Don't cancel the potion effect, just cancel the food level change.
+		// Don't cancel the potion effect, just cancel the change in hunger.
 		if (p.hasPermission("hunger.nohunger") || !plugin.getConfig().getBoolean("global-settings.hunger")) 
 			e.setCancelled(true);
-		
+
 		// Iterate through all valid potion effects and add any that are applicable.
-		for (PotionEffectType effect : PotionEffectType.values()) {
-			HungerUtils.addEffect(p, effect, p.getFoodLevel());
+		for (String effect : plugin.getConfig().getConfigurationSection("effects").getKeys(false)) {
+			utils.addEffect(p, PotionEffectType.getByName(effect.toUpperCase()));
 		}
 	}
 	
@@ -59,12 +63,12 @@ public class GlobalListener implements Listener {
 		FileConfiguration c = plugin.getConfig();
 		
 		// Sanity-Checks
-		if (!HungerUtils.isValidWorld(p) || !HungerUtils.isEnabled()) {
+		if (!utils.isValidWorld(p) || !utils.isEnabled()) {
 			e.setCancelled(false);
 			return;
 		}
 		
-		if (HungerUtils.isExempt(p)) {
+		if (utils.isExempt(p)) {
 			e.setCancelled(false);
 			return;
 		}
@@ -84,8 +88,6 @@ public class GlobalListener implements Listener {
 			p.setFoodLevel((int) (p.getFoodLevel() - c.getInt("depletion-rate.flying")));
 		} else if(p.getLocation().getBlock().getType().equals(Material.WATER)) {
 			p.setFoodLevel((int) (p.getFoodLevel() - c.getInt("depletion-rate.swimming")));
-		} else {
-			e.setCancelled(false);
 		}
 		
 		
@@ -93,5 +95,9 @@ public class GlobalListener implements Listener {
 	
 	public Hunger getPlugin() {
 		return plugin;
+	}
+	
+	public HungerUtils getUtils() {
+		return utils;
 	}
 }
