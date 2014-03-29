@@ -16,16 +16,15 @@
  */
 package com.valygard.vhunger;
 
-import org.bukkit.Material;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.potion.PotionEffectType;
 
+import com.valygard.vhunger.event.HungerChangeEvent;
+import com.valygard.vhunger.event.ScaleHungerEvent;
 import com.valygard.vhunger.util.HungerUtils;
 
 /**
@@ -51,13 +50,12 @@ public class GlobalListener implements Listener {
 		Player p = (Player) e.getEntity();
 		//FileConfiguration cfg = plugin.getConfig();
 		
-		// Don't cancel the potion effect, just cancel the change in hunger.
-		if (p.hasPermission("hunger.nohunger") || !plugin.getConfig().getBoolean("global-settings.hunger")) 
+		HungerChangeEvent event = new HungerChangeEvent(plugin, p);
+		plugin.getServer().getPluginManager().callEvent(event);
+		
+		if (event.isCancelled()) {
 			e.setCancelled(true);
-
-		// Iterate through all valid potion effects and add any that are applicable.
-		for (String effect : plugin.getConfig().getConfigurationSection("effects").getKeys(false)) {
-			utils.addEffect(p, PotionEffectType.getByName(effect.toUpperCase()));
+			return;
 		}
 	}
 	
@@ -83,38 +81,15 @@ public class GlobalListener implements Listener {
 	 */
 	@EventHandler
 	public void scaleHunger(FoodLevelChangeEvent e) {
-		Player p = (Player) e.getEntity();
-		FileConfiguration c = plugin.getConfig();
 		
-		// Sanity-Checks
-		if (!utils.isValidWorld(p) || !utils.isEnabled()) {
-			e.setCancelled(false);
-			return;
-		}
+		ScaleHungerEvent event = new ScaleHungerEvent(plugin, (Player) e.getEntity());
+		plugin.getServer().getPluginManager().callEvent(event);
 		
-		if (utils.isExempt(p)) {
-			e.setCancelled(false);
-			return;
-		}
-		
-		if (!c.getBoolean("global-settings.hunger")) {
+		// Cancel hunger if the custom event is cancelled.
+		if (event.isCancelled()) {
 			e.setCancelled(true);
 			return;
 		}
-		
-		if(p.isSprinting()) {
-			p.setFoodLevel((int) (p.getFoodLevel() - c.getInt("depletion-rate.sprinting")));
-		} else if(p.isSneaking()) {
-			p.setFoodLevel((int) (p.getFoodLevel() - c.getInt("depletion-rate.sneaking")));
-		} else if(p.isSleeping()) {
-			p.setFoodLevel((int) (p.getFoodLevel() - c.getInt("depletion-rate.sleeping")));
-		} else if(p.isFlying()) {
-			p.setFoodLevel((int) (p.getFoodLevel() - c.getInt("depletion-rate.flying")));
-		} else if(p.getLocation().getBlock().getType().equals(Material.WATER)) {
-			p.setFoodLevel((int) (p.getFoodLevel() - c.getInt("depletion-rate.swimming")));
-		}
-		
-		
 	}
 	
 	public Hunger getPlugin() {

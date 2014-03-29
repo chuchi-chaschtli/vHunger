@@ -22,6 +22,8 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import com.valygard.vhunger.event.HungerChangeEvent;
+
 /**
  * @author Anand
  *
@@ -71,11 +73,7 @@ public class Commands implements CommandExecutor {
 					return false;
 				}
 				
-				// Set their hunger and saturation to the max.
-				p.setFoodLevel(20);
-				p.setSaturation(20);
-				
-				plugin.tell(p, "You have been satiated.");
+				nourish(p);
 			} else {
 				// If the args[0] is anything else, it should check if its a player.
 				if (!p.hasPermission("hunger.check.others")) {
@@ -133,8 +131,12 @@ public class Commands implements CommandExecutor {
 				
 				try {
 					int newHunger = Integer.parseInt(args[1]);
+					
 					p.setFoodLevel(newHunger);
-					p.setSaturation(newHunger);
+					p.setSaturation(newHunger / 2);
+					p.setExhaustion(0F);
+					callHungerEvent(p);
+					
 					plugin.tell(p, "You have set your hunger to &e" + newHunger + ".");
 				} catch (NumberFormatException e) {
 					throw new NumberFormatException("Expected integer between 0-20 for hunger!");
@@ -154,12 +156,8 @@ public class Commands implements CommandExecutor {
 					return false;
 				}
 				
-				// Feed the player.
-				args2.setFoodLevel(20);
-				args2.setSaturation(20);
-				
+				nourish(args2);
 				plugin.tell(p, "You have satiated &e " + args2.getName() + ".");
-				plugin.tell(args2, "You have been satiated.");
 			}
 			
 			else {
@@ -191,7 +189,9 @@ public class Commands implements CommandExecutor {
 				int newHunger = Integer.parseInt(args[2]);
 				
 				args2.setFoodLevel(newHunger);
-				args2.setSaturation(newHunger);
+				args2.setSaturation(newHunger / 2);
+				
+				callHungerEvent(args2);
 				
 				plugin.tell(args2, "Your hunger is now &e " + newHunger + ".");
 				plugin.tell(p, "You have set the hunger of &e " + args2.getName() + " &rto&e " + newHunger + ".");
@@ -208,6 +208,24 @@ public class Commands implements CommandExecutor {
 			plugin.tell(p, "You do not have permission to use this command.");
 		if (!invalidArgs)
 			plugin.tell(p, "Invalid arguments. Use &e/hunger help&r for a list of commands.");
+	}
+	
+	private void callHungerEvent(Player p) {
+		HungerChangeEvent event = new HungerChangeEvent(plugin, p);
+		plugin.getServer().getPluginManager().callEvent(event);
+		
+		if (event.isCancelled())
+			return;
+	}
+	
+	private void nourish(Player p) {
+		p.setFoodLevel(20);
+		p.setSaturation(10);
+		p.setExhaustion(0F);
+		
+		plugin.tell(p, "You have been satiated.");
+		
+		callHungerEvent(p);
 	}
 	
 	public Hunger getPlugin() {
