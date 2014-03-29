@@ -16,17 +16,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 
 /**
- * Check dev.bukkit.org to find updates for a given plugin, and download the updates if needed.
- * <p/>
- * <b>VERY, VERY IMPORTANT</b>: Because there are no standards for adding auto-update toggles in your plugin's config, this system provides NO CHECK WITH YOUR CONFIG to make sure the user has allowed auto-updating.
- * <br>
- * It is a <b>BUKKIT POLICY</b> that you include a boolean value in your config that prevents the auto-updater from running <b>AT ALL</b>.
- * <br>
- * If you fail to include this option in your config, your plugin will be <b>REJECTED</b> when you attempt to submit it to dev.bukkit.org.
- * <p/>
- * An example of a good configuration option would be something similar to 'auto-update: true' - if this value is set to false you may NOT run the auto-updater.
- * <br>
- * If you are unsure about these rules, please read the plugin submission guidelines: http://goo.gl/8iU5l
+ * Slightly modified version of @Gravity's Updater class.
  *
  * @author Gravity
  * @version 2.1
@@ -57,7 +47,7 @@ public class Updater {
     private static final String HOST = "https://api.curseforge.com"; // Slugs will be appended to this to get to the project's RSS feed
 
     private static final String USER_AGENT = "Updater (by Gravity)";
-    private static final String delimiter = "^v|[\\s_-]v"; // Used for locating version numbers in file names
+    private static final String delimiter = "Hunger "; // Used for locating version numbers in file names
     private static final String[] NO_UPDATE_TAG = { "-DEV", "-PRE", "-SNAPSHOT" }; // If the version number contains one of these, don't update.
     private static final int BYTE_SIZE = 1024; // Used for downloading files
     private final YamlConfiguration config = new YamlConfiguration(); // Config file
@@ -456,7 +446,7 @@ public class Updater {
             final String localVersion = this.plugin.getDescription().getVersion();
             if (title.split(delimiter).length == 2) {
                 final String remoteVersion = title.split(delimiter)[1].split(" ")[0]; // Get the newest file's version number
-
+                
                 if (this.hasTag(localVersion) || !this.shouldUpdate(localVersion, remoteVersion)) {
                     // We already have the latest version, or this build is tagged for no-update
                     this.result = Updater.UpdateResult.NO_UPDATE;

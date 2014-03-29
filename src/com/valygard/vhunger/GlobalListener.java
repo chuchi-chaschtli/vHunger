@@ -64,22 +64,17 @@ public class GlobalListener implements Listener {
 	/*
 	 * Notify players of new updates.
 	 */
-	@EventHandler
+	@EventHandler (priority = EventPriority.HIGHEST)
 	public void onJoin(PlayerJoinEvent e) {
 		Player p = e.getPlayer();
 		// Only ops or those with proper permissions get update messages.
-		if (!p.hasPermission("hunger.admin") && !p.hasPermission("hunger.update") && !p.isOp())
+		if (!p.hasPermission("hunger.update") && !p.isOp())
 			return;
 		
 		if (!plugin.update)
 			return;
 		
-		if (!plugin.getConfig().getBoolean("global-settings.check-for-updates"))
-			return;
-		
-		// If auto-update is disabled, tell the player that vHunger is available for download.
-		if (!plugin.getConfig().getBoolean("global-settings.auto-update"))
-			plugin.tell(p, "&e" + plugin.name + " &r is available for download at:&e http://dev.bukkit.org/bukkit-plugins/vhunger/");
+		plugin.tell(p, "&e" + plugin.name + "&r is available for download at:&e http://dev.bukkit.org/bukkit-plugins/vhunger/");
 	}
 	
 	/*

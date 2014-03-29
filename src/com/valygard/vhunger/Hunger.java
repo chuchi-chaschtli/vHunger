@@ -74,15 +74,16 @@ public class Hunger extends JavaPlugin {
 		
 		if (getConfig().getBoolean("global-settings.auto-update")) {
 			Updater updater = new Updater(this, 65327, this.getFile(), Updater.UpdateType.DEFAULT, true);
-			update = updater.getResult() == Updater.UpdateResult.UPDATE_AVAILABLE;
+			update = updater.getResult() == Updater.UpdateResult.SUCCESS;
 			name = updater.getLatestName(); 
 			getLogger().log(Level.INFO, name + " has been installed. Restart your server for changes to take effect.");
 			return;
 		}
 		
 		Updater updater = new Updater(this, 65327, this.getFile(), Updater.UpdateType.NO_DOWNLOAD, true);
-		update = updater.getResult() == Updater.UpdateResult.SUCCESS;
+		update = updater.getResult() == Updater.UpdateResult.UPDATE_AVAILABLE;
 		name = updater.getLatestName(); 
+		getLogger().log(Level.INFO, name + " is available for download at: http://dev.bukkit.org/bukkit-plugins/vhunger/");
 		return;
 	}
 
