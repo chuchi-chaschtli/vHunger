@@ -1,13 +1,15 @@
 package com.valygard.vhunger.util;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.Enumeration;
 import java.util.logging.Level;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;
@@ -47,7 +49,7 @@ public class Updater {
     private static final String HOST = "https://api.curseforge.com"; // Slugs will be appended to this to get to the project's RSS feed
 
     private static final String USER_AGENT = "Updater (by Gravity)";
-    private static final String delimiter = "Hunger "; // Used for locating version numbers in file names
+    private static final String delimiter = "v|[\\s_-]v"; // Used for locating version numbers in file names
     private static final String[] NO_UPDATE_TAG = { "-DEV", "-PRE", "-SNAPSHOT" }; // If the version number contains one of these, don't update.
     private static final int BYTE_SIZE = 1024; // Used for downloading files
     private final YamlConfiguration config = new YamlConfiguration(); // Config file
@@ -317,12 +319,6 @@ public class Updater {
                     xFile.delete();
                 }
             }
-            // Check to see if it's a zip file, if it is, unzip it.
-            final File dFile = new File(folder.getAbsolutePath() + File.separator + file);
-            if (dFile.getName().endsWith(".zip")) {
-                // Unzip
-                this.unzip(dFile.getCanonicalPath());
-            }
             if (this.announce) {
                 this.plugin.getLogger().info("Finished updating.");
             }
@@ -343,99 +339,6 @@ public class Updater {
     }
 
     /**
-     * Part of Zip-File-Extractor, modified by Gravity for use with Updater.
-     *
-     * @param file the location of the file to extract.
-     */
-    private void unzip(String file) {
-        try {
-            final File fSourceZip = new File(file);
-            final String zipPath = file.substring(0, file.length() - 4);
-            ZipFile zipFile = new ZipFile(fSourceZip);
-            Enumeration<? extends ZipEntry> e = zipFile.entries();
-            while (e.hasMoreElements()) {
-                ZipEntry entry = e.nextElement();
-                File destinationFilePath = new File(zipPath, entry.getName());
-                destinationFilePath.getParentFile().mkdirs();
-                if (entry.isDirectory()) {
-                    continue;
-                } else {
-                    final BufferedInputStream bis = new BufferedInputStream(zipFile.getInputStream(entry));
-                    int b;
-                    final byte buffer[] = new byte[Updater.BYTE_SIZE];
-                    final FileOutputStream fos = new FileOutputStream(destinationFilePath);
-                    final BufferedOutputStream bos = new BufferedOutputStream(fos, Updater.BYTE_SIZE);
-                    while ((b = bis.read(buffer, 0, Updater.BYTE_SIZE)) != -1) {
-                        bos.write(buffer, 0, b);
-                    }
-                    bos.flush();
-                    bos.close();
-                    bis.close();
-                    final String name = destinationFilePath.getName();
-                    if (name.endsWith(".jar") && this.pluginFile(name)) {
-                        destinationFilePath.renameTo(new File(this.plugin.getDataFolder().getParent(), this.updateFolder + File.separator + name));
-                    }
-                }
-                entry = null;
-                destinationFilePath = null;
-            }
-            e = null;
-            zipFile.close();
-            zipFile = null;
-
-            // Move any plugin data folders that were included to the right place, Bukkit won't do this for us.
-            for (final File dFile : new File(zipPath).listFiles()) {
-                if (dFile.isDirectory()) {
-                    if (this.pluginFile(dFile.getName())) {
-                        final File oFile = new File(this.plugin.getDataFolder().getParent(), dFile.getName()); // Get current dir
-                        final File[] contents = oFile.listFiles(); // List of existing files in the current dir
-                        for (final File cFile : dFile.listFiles()) // Loop through all the files in the new dir
-                        {
-                            boolean found = false;
-                            for (final File xFile : contents) // Loop through contents to see if it exists
-                            {
-                                if (xFile.getName().equals(cFile.getName())) {
-                                    found = true;
-                                    break;
-                                }
-                            }
-                            if (!found) {
-                                // Move the new file into the current dir
-                                cFile.renameTo(new File(oFile.getCanonicalFile() + File.separator + cFile.getName()));
-                            } else {
-                                // This file already exists, so we don't need it anymore.
-                                cFile.delete();
-                            }
-                        }
-                    }
-                }
-                dFile.delete();
-            }
-            new File(zipPath).delete();
-            fSourceZip.delete();
-        } catch (final IOException e) {
-            this.plugin.getLogger().log(Level.SEVERE, "The auto-updater tried to unzip a new update file, but was unsuccessful.", e);
-            this.result = Updater.UpdateResult.FAIL_DOWNLOAD;
-        }
-        new File(file).delete();
-    }
-
-    /**
-     * Check if the name of a jar is one of the plugins currently installed, used for extracting the correct files out of a zip.
-     *
-     * @param name a name to check for inside the plugins folder.
-     * @return true if a file inside the plugins folder is named this.
-     */
-    private boolean pluginFile(String name) {
-        for (final File file : new File("plugins").listFiles()) {
-            if (file.getName().equals(name)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
      * Check to see if the program should continue by evaluating whether the plugin is already updated, or shouldn't be updated.
      *
      * @param title the plugin's title.
@@ -444,8 +347,8 @@ public class Updater {
     private boolean versionCheck(String title) {
         if (this.type != UpdateType.NO_VERSION_CHECK) {
             final String localVersion = this.plugin.getDescription().getVersion();
-            if (title.split(delimiter).length == 2) {
-                final String remoteVersion = title.split(delimiter)[1].split(" ")[0]; // Get the newest file's version number
+            if (title.split(delimiter).length == 3) {
+                final String remoteVersion = title.split(delimiter)[2].split(" ")[0]; // Get the newest file's version number
                 
                 if (this.hasTag(localVersion) || !this.shouldUpdate(localVersion, remoteVersion)) {
                     // We already have the latest version, or this build is tagged for no-update
@@ -567,19 +470,21 @@ public class Updater {
             if (Updater.this.url != null) {
                 // Obtain the results of the project's file feed
                 if (Updater.this.read()) {
-                    if (Updater.this.versionCheck(Updater.this.versionName)) {
-                        if ((Updater.this.versionLink != null) && (Updater.this.type != UpdateType.NO_DOWNLOAD)) {
-                            String name = Updater.this.file.getName();
-                            // If it's a zip file, it shouldn't be downloaded as the plugin's name
-                            if (Updater.this.versionLink.endsWith(".zip")) {
-                                final String[] split = Updater.this.versionLink.split("/");
-                                name = split[split.length - 1];
-                            }
-                            Updater.this.saveFile(new File(Updater.this.plugin.getDataFolder().getParent(), Updater.this.updateFolder), name, Updater.this.versionLink);
-                        } else {
-                            Updater.this.result = UpdateResult.UPDATE_AVAILABLE;
-                        }
-                    }
+                	if (Updater.this.versionCheck(Updater.this.versionName)) {
+                		if (Updater.this.versionLink != null) {
+                			if (Updater.this.type != UpdateType.NO_DOWNLOAD) {
+                				String name = Updater.this.file.getName();
+                				// If it's a zip file, it shouldn't be downloaded as the plugin's name
+                				if (Updater.this.versionLink.endsWith(".zip")) {
+                					final String[] split = Updater.this.versionLink.split("/");
+                					name = split[split.length - 1];
+                				}
+                				Updater.this.saveFile(new File(Updater.this.plugin.getDataFolder().getParent(), Updater.this.updateFolder), name, Updater.this.versionLink);
+                			} else {
+                				Updater.this.result = UpdateResult.UPDATE_AVAILABLE;
+                			}
+                		}
+                	}
                 }
             }
         }

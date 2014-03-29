@@ -1,6 +1,6 @@
 name: vHunger
 main: com.valygard.vhunger.Hunger
-version: 1.2.2.84
+version: 1.2.2.87
 author: AoH_Ruthless
 website: http://valygard.com
 commands:
@@ -23,4 +23,6 @@ permissions:
       hunger.user: true
       hunger.update: true
       hunger.check.others: true
+      hunger.config.save: true
+      hunger.config.reload: true
     

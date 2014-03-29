@@ -76,15 +76,17 @@ public class Hunger extends JavaPlugin {
 			Updater updater = new Updater(this, 65327, this.getFile(), Updater.UpdateType.DEFAULT, true);
 			update = updater.getResult() == Updater.UpdateResult.SUCCESS;
 			name = updater.getLatestName(); 
-			getLogger().log(Level.INFO, name + " has been installed. Restart your server for changes to take effect.");
+			
+			if (update)
+				getLogger().log(Level.INFO, name + " has been installed. Restart your server for changes to take effect.");
 			return;
 		}
-		
 		Updater updater = new Updater(this, 65327, this.getFile(), Updater.UpdateType.NO_DOWNLOAD, true);
 		update = updater.getResult() == Updater.UpdateResult.UPDATE_AVAILABLE;
-		name = updater.getLatestName(); 
-		getLogger().log(Level.INFO, name + " is available for download at: http://dev.bukkit.org/bukkit-plugins/vhunger/");
-		return;
+		name = updater.getLatestName();
+		
+		if (update)
+			getLogger().log(Level.INFO, name + " is available for download at: http://dev.bukkit.org/bukkit-plugins/vhunger/");
 	}
 
 	private void loadConfig() {
