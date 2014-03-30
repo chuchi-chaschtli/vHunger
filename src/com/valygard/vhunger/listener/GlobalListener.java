@@ -14,7 +14,7 @@
  * You can view a copy of the GNU General Public License at 
  * <http://www.gnu.org/licenses/> if you have not received a copy.
  */
-package com.valygard.vhunger;
+package com.valygard.vhunger.listener;
 
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -23,6 +23,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 
+import com.valygard.vhunger.Hunger;
 import com.valygard.vhunger.event.HungerChangeEvent;
 import com.valygard.vhunger.event.ScaleHungerEvent;
 import com.valygard.vhunger.util.HungerUtils;

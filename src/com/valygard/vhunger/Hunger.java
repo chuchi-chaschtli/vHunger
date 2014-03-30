@@ -24,6 +24,8 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import com.valygard.vhunger.listener.GlobalListener;
+import com.valygard.vhunger.listener.WorldListener;
 import com.valygard.vhunger.util.HungerUtils;
 import com.valygard.vhunger.util.Updater;
 
@@ -59,6 +61,7 @@ public class Hunger extends JavaPlugin {
 	
 	private void registerEvents() {
 		getServer().getPluginManager().registerEvents(new GlobalListener(this), this);
+		getServer().getPluginManager().registerEvents(new WorldListener(this), this);
 	}
 	
 	private void registerCommands() {
